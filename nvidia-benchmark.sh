@@ -62,7 +62,6 @@ stop_container(){
 }
 
 benchmarks(){
-  # For CPU tests, we skip watt logging to simplify things.
   if [ "$1" != "h264_1080p_cpu" ]; then
       nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits -lms 100 > $1.nvsmi &
       watt_pid=$!
