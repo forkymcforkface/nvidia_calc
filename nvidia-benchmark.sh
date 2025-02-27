@@ -62,31 +62,17 @@ stop_container(){
 }
 
 benchmarks(){
-  # Log wattage
-  if [ "$1" = "h264_1080p_cpu" ]; then
-      intel_gpu_top -s 100ms -l -o $1.output &
-      watt_pid=$(echo $!)
-  else
+  # For CPU tests, we skip watt logging to simplify things.
+  if [ "$1" != "h264_1080p_cpu" ]; then
       nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits -lms 100 > $1.nvsmi &
-      watt_pid=$(echo $!)
+      watt_pid=$!
   fi
 
   docker exec -it jellyfin-qsvtest /config/benchmark.sh $1
 
-  kill -s SIGINT $watt_pid
-  sleep 1s
-
-  if [ "$1" = "h264_1080p_cpu" ]; then
-      watt_values=$(awk '{ print $5 }' $1.output | grep -Ev '^0|Power|gpu')
-      if [ -z "$watt_values" ]; then
-          avg_watts="N/A"
-      else
-          total_watts=$(echo "$watt_values" | paste -sd+ - | bc)
-          total_count=$(echo "$watt_values" | wc -l)
-          avg_watts=$(echo "scale=2; $total_watts / $total_count" | bc -l)
-      fi
-      rm -f $1.output
-  else
+  if [ "$1" != "h264_1080p_cpu" ]; then
+      kill -s SIGINT $watt_pid
+      sleep 1s
       watt_values=$(grep -Eo '^[0-9]+(\.[0-9]+)?' $1.nvsmi)
       if [ -z "$watt_values" ]; then
           avg_watts="N/A"
@@ -96,6 +82,8 @@ benchmarks(){
           avg_watts=$(echo "scale=2; $total_watts / $total_count" | bc -l)
       fi
       rm -f $1.nvsmi
+  else
+      avg_watts="N/A"
   fi
 
   for i in $(ls ffmpeg-*.log); do
