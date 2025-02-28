@@ -67,7 +67,7 @@ benchmarks(){
       watt_pid=$!
   fi
 
-  docker exec -it jellyfin-qsvtest /config/benchmark.sh $1
+  docker exec -it jellyfin-qsvtest /config/benchmark-nvenc.sh $1
 
   if [ "$1" != "h264_1080p_cpu" ]; then
       kill -s SIGINT $watt_pid
