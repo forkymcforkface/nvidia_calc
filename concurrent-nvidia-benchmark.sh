@@ -60,7 +60,6 @@ stop_container(){
   fi
 }
 
-# Original sequential benchmark function – calls your benchmark.sh script.
 benchmarks(){
   docker exec -it jellyfin-qsvtest /config/benchmark-nvenc.sh "$1"
 }
